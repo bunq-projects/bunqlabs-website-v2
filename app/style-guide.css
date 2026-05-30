@@ -1,0 +1,222 @@
+/* =============================================================================
+   STYLE GUIDE — design tokens
+   -----------------------------------------------------------------------------
+   Single source of truth for the site's look. Change a value here and it
+   propagates everywhere (globals.css and every component consume these tokens).
+
+   Built on widely-adopted conventions:
+   - Fluid type scale via clamp(), interpolated between a 360px and a 1240px
+     viewport (the "Utopia" method) — no media queries needed.
+   - 8-point spacing grid (Material / HIG convention).
+   - Semantic, theme-aware color tokens (light is the site default).
+
+   HOW TO EDIT
+   - Bigger/smaller text everywhere → edit the --text-* scale (section 2) or the
+     semantic sizes (section 12, e.g. --text-nav).
+   - Re-skin colors → section 13.
+   - Spacing rhythm → section 6.  Corner roundness → section 7.
+============================================================================= */
+
+:root {
+  /* ===========================================================================
+     1 · TYPEFACES
+  ============================================================================ */
+  --font-primary: "Larken", Georgia, "Times New Roman", serif; /* display/headings */
+  --font-secondary: var(--font-geist-mono), ui-monospace, "SFMono-Regular",
+    monospace; /* mono / UI labels */
+
+  /* aliases kept for back-compat with existing class names */
+  --font-larken: var(--font-primary);
+  --font-mono: var(--font-secondary);
+
+  /* ===========================================================================
+     2 · TYPE SCALE  (fluid · 360px → 1240px · modular)
+     Each step is clamp(min, fluid, max). Comments show min→max px and ratio.
+  ============================================================================ */
+  --text-2xs: clamp(0.75rem, 0.114vw + 0.7244rem, 0.8125rem); /* 12→13 */
+  --text-xs: clamp(0.8125rem, 0.114vw + 0.7869rem, 0.875rem); /* 13→14 */
+  --text-sm: clamp(0.875rem, 0.17vw + 0.8366rem, 0.9688rem); /* 14→15.5 */
+  --text-base: clamp(1rem, 0.114vw + 0.9744rem, 1.0625rem); /* 16→17 */
+  --text-md: clamp(1.125rem, 0.341vw + 1.0483rem, 1.3125rem); /* 18→21 */
+  --text-lg: clamp(1.375rem, 0.568vw + 1.2472rem, 1.6875rem); /* 22→27 */
+  --text-xl: clamp(1.75rem, 0.909vw + 1.5455rem, 2.25rem); /* 28→36 */
+  --text-2xl: clamp(2.125rem, 1.591vw + 1.767rem, 3rem); /* 34→48 */
+  --text-3xl: clamp(2.75rem, 2.727vw + 2.1364rem, 4.25rem); /* 44→68 */
+  --text-display: clamp(2.5rem, 8.182vw + 0.6591rem, 7rem); /* 40→112 (hero) */
+
+  /* ===========================================================================
+     3 · FONT WEIGHTS
+  ============================================================================ */
+  --weight-light: 300;
+  --weight-regular: 400;
+  --weight-medium: 500;
+
+  /* ===========================================================================
+     4 · LINE HEIGHTS
+  ============================================================================ */
+  --leading-none: 1;
+  --leading-tight: 1.05;
+  --leading-snug: 1.2;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.7;
+
+  /* ===========================================================================
+     5 · LETTER SPACING (tracking)
+  ============================================================================ */
+  --tracking-tighter: -0.03em;
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.02em;
+  --tracking-wider: 0.12em;
+  --tracking-widest: 0.2em;
+
+  /* ===========================================================================
+     6 · SPACING  (8-point grid + a couple of fluid gutters)
+  ============================================================================ */
+  --space-3xs: 0.25rem; /* 4 */
+  --space-2xs: 0.5rem; /* 8 */
+  --space-xs: 0.75rem; /* 12 */
+  --space-sm: 1rem; /* 16 */
+  --space-md: 1.5rem; /* 24 */
+  --space-lg: 2rem; /* 32 */
+  --space-xl: 3rem; /* 48 */
+  --space-2xl: 4rem; /* 64 */
+  --space-3xl: 6rem; /* 96 */
+  --space-4xl: 8rem; /* 128 */
+
+  --space-page: clamp(1.25rem, 4vw, 3rem); /* page gutter */
+  --space-nav-gap: clamp(1rem, 3vw, 2.5rem); /* nav center spacing */
+
+  /* ===========================================================================
+     7 · RADII
+  ============================================================================ */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  /* ===========================================================================
+     8 · LAYOUT
+  ============================================================================ */
+  --container-max: 1240px;
+  --navbar-pad-y: clamp(1rem, 2.5vw, 1.75rem);
+  --navbar-pad-x: clamp(1.25rem, 4vw, 3rem);
+
+  /* ===========================================================================
+     9 · Z-INDEX SCALE  (one place to reason about stacking)
+  ============================================================================ */
+  --z-canvas: 0;
+  --z-content: 1;
+  --z-navbar: 10;
+  --z-overlay: 50; /* contact / panel modals */
+  --z-loader: 100; /* intro gate, above everything */
+
+  /* ===========================================================================
+     10 · MOTION
+  ============================================================================ */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --duration-fast: 0.2s;
+  --duration-base: 0.4s;
+  --duration-slow: 0.5s;
+  --transition-theme:
+    background-color var(--duration-base) ease, color var(--duration-base) ease;
+
+  /* ===========================================================================
+     11 · EFFECTS
+  ============================================================================ */
+  --blur-overlay: 16px;
+
+  /* ===========================================================================
+     12 · SEMANTIC SIZES  (point components here; tweak once, changes globally)
+  ============================================================================ */
+  --text-nav: var(--text-xs); /* navbar links / UI labels */
+  --text-eyebrow: var(--text-2xs); /* small mono labels */
+  --text-body: var(--text-base);
+  --text-hero: clamp(1.5rem, 5.5vw, 3.5rem); /* hero heading (24→56px) */
+}
+
+/* =============================================================================
+   13 · COLOR — theme-aware semantic tokens
+   :root + [data-theme="light"] = light (site default).  [data-theme="dark"]
+============================================================================= */
+:root,
+[data-theme="light"] {
+  --bg: #f5f5f7;
+  --fg: #0a0a0f;
+  --fg-muted: rgba(10, 10, 15, 0.55);
+  --line: rgba(10, 10, 15, 0.12);
+  --overlay: rgba(245, 245, 247, 0.82);
+  --accent: #5b3df5;
+  --color-error: #d23d57;
+}
+
+[data-theme="dark"] {
+  --bg: #0a0a0f;
+  --fg: #f5f5f7;
+  --fg-muted: rgba(245, 245, 247, 0.6);
+  --line: rgba(245, 245, 247, 0.14);
+  --overlay: rgba(10, 10, 15, 0.82);
+  --accent: #6d4aff;
+  --color-error: #e0556b;
+}
+
+/* =============================================================================
+   14 · REUSABLE PRIMITIVES (lightweight component classes)
+   Use these for new UI so styling stays consistent without re-deriving values.
+============================================================================= */
+
+/* Visually hidden, but readable by screen readers */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Small uppercase mono label */
+.u-eyebrow {
+  font-family: var(--font-secondary);
+  font-size: var(--text-eyebrow);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+}
+
+/* Pill button — base + variants */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-secondary);
+  font-size: var(--text-nav);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  cursor: pointer;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  padding: 0.85rem 2rem;
+  transition:
+    opacity var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out);
+}
+.btn--primary {
+  background: var(--fg);
+  color: var(--bg);
+}
+.btn--primary:hover {
+  opacity: 0.85;
+}
+.btn--ghost {
+  background: none;
+  color: var(--fg);
+  border-color: var(--line);
+}
+.btn--ghost:hover {
+  border-color: var(--fg);
+}

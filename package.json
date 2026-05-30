@@ -1,0 +1,35 @@
+{
+  "name": "bunqlabs-website-v2",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "serve": "npx serve out",
+    "clean": "node -e \"const fs=require('fs');['.next','out','node_modules/.cache'].forEach(p=>fs.rmSync(p,{recursive:true,force:true}))\""
+  },
+  "dependencies": {
+    "@react-three/drei": "^10.0.0",
+    "@react-three/fiber": "^9.0.0",
+    "@react-three/postprocessing": "^3.0.4",
+    "draco3d": "^1.5.7",
+    "geist": "^1.7.1",
+    "gsap": "^3.12.5",
+    "howler": "^2.2.4",
+    "next": "^15.1.6",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "three": "^0.172.0",
+    "zustand": "^5.0.14"
+  },
+  "devDependencies": {
+    "@types/howler": "^2.2.12",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@types/three": "^0.172.0",
+    "typescript": "^5.7.0"
+  }
+}

@@ -1,0 +1,40 @@
+interface LogoMarkProps {
+  /** Pixel size (square). Overridden by CSS if a className sets dimensions. */
+  size?: number;
+  className?: string;
+  /** Accessible title. If omitted the mark is treated as decorative. */
+  title?: string;
+}
+
+/**
+ * BUNQ Labs logomark — reusable, theme-aware inline SVG.
+ *
+ * Uses `fill="currentColor"`, so it inherits the surrounding text color and
+ * flips automatically between light/dark mode. Mirrors public/logo.svg (the
+ * raw asset used for favicon / social / non-React contexts) — keep them in
+ * sync if the artwork changes.
+ */
+export default function LogoMark({ size = 28, className, title }: LogoMarkProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 64 64"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      role={title ? "img" : undefined}
+      aria-hidden={title ? undefined : true}
+    >
+      {title ? <title>{title}</title> : null}
+      <path
+        d="M48 64H0L4.86401 33.664C24.9405 33.664 25.1464 45.5228 24.1322 53.2974C25.3012 45.5228 27.9235 33.664 48 33.664C56.8365 33.664 64 39.1634 64 48C64 56.8366 56.8365 64 48 64Z"
+        fill="currentColor"
+      />
+      <path
+        d="M48 0C56.8365 0 64 7.16344 64 16C64 24.8366 56.8365 30.464 48 30.464C27.9371 30.464 29.0528 18.6212 30.3433 10.8463C28.9084 18.5563 25.0033 30.2678 5.37601 30.464L10.24 0H48Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
