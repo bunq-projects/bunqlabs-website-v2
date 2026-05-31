@@ -4,15 +4,12 @@ import { useEffect } from "react";
 import { useAppStore, type PanelId } from "@/lib/store";
 
 // Content for each in-place panel. Add a key here (and to PanelId in the store)
-// to introduce a new navbar overlay — no routing needed.
+// to introduce a new navbar overlay — no routing needed. (Work is no longer a
+// panel — it's a full in-place view; see components/work/WorkView.tsx.)
 const CONTENT: Record<PanelId, { title: string; body: string }> = {
   about: {
     title: "About",
     body: "BUNQ Labs is a creative studio crafting immersive, performant 3D experiences for brands that want to be felt, not just seen. We blend design, motion and real-time graphics — built natively for the open web.",
-  },
-  work: {
-    title: "Work",
-    body: "Selected projects are on the way. Check back soon — or get in touch and we'll walk you through our latest.",
   },
 };
 

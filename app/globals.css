@@ -13,9 +13,7 @@
 ---------------------------------------------------------------------------- */
 @font-face {
   font-family: "Larken";
-  src:
-    url("/fonts/larken-light.woff2") format("woff2"),
-    url("/fonts/larken-light.woff") format("woff");
+  src: url("/fonts/Larken-Light.woff2") format("woff2");
   font-weight: 300;
   font-style: normal;
   font-display: swap;
@@ -47,6 +45,22 @@ body {
   transition: var(--transition-theme);
 }
 
+/* Whole-page color crossfade, active ONLY while a theme is changing (the
+   theme system adds `.theme-transitioning` to <html> for ~400ms, then removes
+   it). Scoped this way so there's zero transition cost during normal use, and
+   it overrides per-element transitions just for the swap. */
+html.theme-transitioning,
+html.theme-transitioning *,
+html.theme-transitioning *::before,
+html.theme-transitioning *::after {
+  transition:
+    background-color var(--duration-base) var(--ease-out),
+    color var(--duration-base) var(--ease-out),
+    border-color var(--duration-base) var(--ease-out),
+    fill var(--duration-base) var(--ease-out),
+    stroke var(--duration-base) var(--ease-out) !important;
+}
+
 /* ----------------------------------------------------------------------------
    Layout layers
 ---------------------------------------------------------------------------- */
@@ -68,11 +82,110 @@ body {
 }
 
 /* ----------------------------------------------------------------------------
+   Background grid — faint 12-column guide (13 evenly-spaced vertical lines).
+   Sits above the canvas, below content; inset by --grid-margin. Theme-aware.
+---------------------------------------------------------------------------- */
+.grid-overlay {
+  position: fixed;
+  inset: 0; /* full viewport width — columns span edge to edge */
+  z-index: var(--z-grid);
+  pointer-events: none;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  column-gap: var(--grid-gutter);
+}
+/* Each column is outlined on both edges; the column-gap is the gutter, so every
+   gutter shows two lines (this column's right edge + the next column's left). */
+.grid-column {
+  border-left: 1px solid var(--grid-line);
+  border-right: 1px solid var(--grid-line);
+}
+
+/* ----------------------------------------------------------------------------
+   Page frame — a solid border hugging the viewport with a rounded inner window.
+   Built from real elements (no box-shadow): 4 equal-width edge bars + 4 corner
+   pieces whose concave inner corner is cut with a tiny mask. Every side is
+   exactly --frame-width; all use background-color, so they're cheap and
+   crossfade with the theme.
+---------------------------------------------------------------------------- */
+.page-frame {
+  position: fixed;
+  inset: 0;
+  z-index: 9000; /* over content + overlays + loader; under the cursor (9999) */
+  pointer-events: none;
+}
+.page-frame > * {
+  position: absolute;
+  background-color: var(--frame-color);
+}
+/* Edge bars — run between the corner pieces, uniform --frame-width thickness. */
+.pf-top {
+  top: 0;
+  left: var(--frame-corner);
+  right: var(--frame-corner);
+  height: var(--frame-width);
+}
+.pf-bottom {
+  bottom: 0;
+  left: var(--frame-corner);
+  right: var(--frame-corner);
+  height: var(--frame-width);
+}
+.pf-left {
+  left: 0;
+  top: var(--frame-corner);
+  bottom: var(--frame-corner);
+  width: var(--frame-width);
+}
+.pf-right {
+  right: 0;
+  top: var(--frame-corner);
+  bottom: var(--frame-corner);
+  width: var(--frame-width);
+}
+/* Corner pieces — (frame-width + radius) square, with a quarter-circle cut out
+   on the inner side via a mask (cheap, tiny raster). */
+.pf-corner {
+  width: var(--frame-corner);
+  height: var(--frame-corner);
+  -webkit-mask: radial-gradient(
+    circle at var(--pf-cut),
+    transparent var(--frame-radius),
+    #000 calc(var(--frame-radius) + 0.5px)
+  );
+  mask: radial-gradient(
+    circle at var(--pf-cut),
+    transparent var(--frame-radius),
+    #000 calc(var(--frame-radius) + 0.5px)
+  );
+}
+.pf-tl {
+  top: 0;
+  left: 0;
+  --pf-cut: bottom right;
+}
+.pf-tr {
+  top: 0;
+  right: 0;
+  --pf-cut: bottom left;
+}
+.pf-bl {
+  bottom: 0;
+  left: 0;
+  --pf-cut: top right;
+}
+.pf-br {
+  bottom: 0;
+  right: 0;
+  --pf-cut: top left;
+}
+
+/* ----------------------------------------------------------------------------
    Navbar
 ---------------------------------------------------------------------------- */
 .navbar {
   position: fixed;
-  top: 0;
+  top: 6px; /* nudged down a few px */
   left: 0;
   right: 0;
   z-index: var(--z-navbar);
@@ -108,7 +221,7 @@ body {
 .nav-btn-label {
   font-family: var(--font-secondary);
   font-size: var(--text-nav);
-  letter-spacing: var(--tracking-wider);
+  letter-spacing: var(--tracking-mono);
   text-transform: uppercase;
 }
 
@@ -116,18 +229,30 @@ body {
   pointer-events: auto;
   color: var(--fg);
   text-decoration: none;
-  opacity: 0.75;
+  opacity: 0.5;
+  /* Padding = a larger click/tap area around the text. The element itself has
+     no fill or stroke, so it's an invisible hit zone. */
+  padding: 0.5rem 0.65rem;
   transition: opacity var(--duration-fast) var(--ease-out);
 }
 .nav-link:hover {
   opacity: 1;
 }
 
-/* About / Work / Contact are <button>s that open overlays — strip native chrome. */
+/* Contact reads as the accent — red, full opacity (per the design). */
+.nav-contact {
+  color: var(--brand-red);
+  opacity: 1;
+}
+.nav-contact:hover {
+  opacity: 0.8;
+}
+
+/* About / Work / Contact are <button>s that open overlays — strip native chrome
+   (no fill, no stroke); padding comes from .nav-link for the larger hit area. */
 button.nav-link {
   background: none;
   border: none;
-  padding: 0;
   cursor: pointer;
 }
 
@@ -226,6 +351,396 @@ button.nav-link {
   opacity: 1;
 }
 
+/* Red sparkle above the heading. */
+.sparkle {
+  display: block;
+  color: var(--brand-red);
+  margin-bottom: clamp(1.25rem, 3vw, 2.25rem);
+}
+
+/* ----------------------------------------------------------------------------
+   Pill buttons (hero actions) + bottom search bar
+---------------------------------------------------------------------------- */
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-xs);
+  margin-top: clamp(1.5rem, 2.5vw, 2rem);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-family: var(--font-secondary);
+  font-size: var(--text-nav);
+  letter-spacing: var(--tracking-mono);
+  text-transform: uppercase;
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  padding: 0.7rem 1rem;
+  cursor: pointer;
+  transition:
+    opacity var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out);
+}
+.pill:hover {
+  border-color: var(--fg);
+}
+.pill--accent {
+  background: var(--brand-red);
+  color: #fff;
+  border-color: transparent;
+}
+.pill--accent:hover {
+  border-color: transparent;
+  opacity: 0.9;
+}
+
+.pill-dot {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--brand-red);
+}
+.pill--accent .pill-dot {
+  background: #fff;
+}
+
+/* Bottom-center "Ask something…" bar + send button. */
+.search-bar {
+  position: fixed;
+  bottom: clamp(1.25rem, 4vh, 2.5rem);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--z-navbar);
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  pointer-events: auto;
+}
+.search-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  width: clamp(220px, 40vw, 254px);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  padding: 0.7rem 1rem;
+}
+.search-input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--fg);
+  font-family: var(--font-secondary);
+  font-size: var(--text-nav);
+  letter-spacing: var(--tracking-mono);
+  text-transform: uppercase;
+}
+.search-input::placeholder {
+  color: var(--fg);
+  opacity: 0.25;
+}
+.search-send {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease-out);
+}
+.search-send:hover {
+  border-color: var(--fg);
+}
+
+/* ----------------------------------------------------------------------------
+   Work view — project slider chrome (DOM over the 3D tiles).
+   The posters are WebGL planes (components/three/ProjectsSlider). This layer is
+   only crisp UI: the white featured frame, the details panel and the arrows.
+   The featured frame is four white bars around a transparent window, so the
+   active 3D tile shows through it exactly (the slider reads the window's rect).
+---------------------------------------------------------------------------- */
+.work {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-content);
+  /* Pass clicks through to the canvas (3D tiles); buttons opt back in below. */
+  pointer-events: none;
+}
+.work button {
+  pointer-events: auto;
+}
+
+/* Active nav item (Work, while the view is open). */
+.nav-link.is-active {
+  opacity: 1;
+}
+
+/* Featured card (left) -------------------------------------------------------*/
+.work-featured {
+  position: absolute;
+  left: clamp(20px, 5vw, 96px);
+  top: 50%;
+  transform: translateY(-54%);
+  height: clamp(330px, 56vh, 516px);
+  aspect-ratio: 391 / 516;
+  border-radius: var(--wf-radius);
+  overflow: hidden; /* clips the white bars to the rounded corners */
+  animation: work-fade var(--duration-base) var(--ease-out);
+}
+.wf-outline {
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--wf-radius);
+  pointer-events: none;
+}
+/* The white inset border, drawn as four bars; the empty center is the window. */
+.wf-bar {
+  position: absolute;
+  background: var(--bg);
+  pointer-events: none;
+}
+.wf-top {
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--wf-inset);
+}
+.wf-left {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: var(--wf-inset);
+}
+.wf-right {
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: var(--wf-inset);
+}
+.wf-bottom {
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--wf-meta-h);
+}
+/* Transparent window — outline only; the 3D tile fills this rect. */
+.wf-window {
+  position: absolute;
+  top: var(--wf-inset);
+  left: var(--wf-inset);
+  right: var(--wf-inset);
+  bottom: var(--wf-meta-h);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  pointer-events: none;
+}
+/* Bottom meta strip — wordmark + OPEN. */
+.wf-meta {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--wf-meta-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 clamp(12px, 1.4vw, 18px);
+}
+.wf-name {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  font-family: var(--font-secondary);
+  font-size: var(--text-nav);
+  letter-spacing: var(--tracking-mono);
+  color: var(--fg);
+}
+.wf-dot {
+  width: 9px;
+  height: 9px;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+.wf-open {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  font-family: var(--font-secondary);
+  font-size: var(--text-nav);
+  letter-spacing: var(--tracking-mono);
+  text-transform: uppercase;
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-pill);
+  padding: 0.55rem 0.95rem;
+  cursor: pointer;
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    opacity var(--duration-fast) var(--ease-out);
+}
+.wf-open:hover {
+  border-color: var(--fg);
+}
+.wf-open-icon {
+  display: block;
+}
+
+/* Details (right) ------------------------------------------------------------*/
+.work-details {
+  position: absolute;
+  left: 52%;
+  top: clamp(86px, 19vh, 184px);
+  width: min(42vw, 520px);
+  animation: work-fade 0.45s var(--ease-out);
+}
+@keyframes work-fade {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.work-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2xs);
+  margin-bottom: var(--space-md);
+}
+.work-tag {
+  font-family: var(--font-secondary);
+  font-size: var(--text-eyebrow);
+  letter-spacing: var(--tracking-mono);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 0.25rem 0.5rem;
+}
+.work-desc {
+  font-family: var(--font-primary);
+  font-weight: var(--weight-light);
+  font-size: var(--text-xl);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+  color: var(--fg);
+}
+.work-stats {
+  display: flex;
+  gap: clamp(1rem, 2vw, 1.75rem);
+  margin-top: clamp(1.25rem, 3vh, 2rem);
+}
+.work-stat {
+  display: flex;
+  flex-direction: column;
+  padding-left: var(--space-xs);
+  border-left: 1px solid var(--line);
+}
+.work-stat-value {
+  font-family: var(--font-primary);
+  font-weight: var(--weight-light);
+  font-size: var(--text-xl);
+  line-height: var(--leading-tight);
+  color: var(--fg);
+}
+.work-stat-label {
+  margin-top: var(--space-3xs);
+  font-family: var(--font-secondary);
+  font-size: var(--text-eyebrow);
+  letter-spacing: var(--tracking-mono);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+/* Prev / next arrows ---------------------------------------------------------*/
+.work-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(40px, 3.4vw, 48px);
+  height: clamp(40px, 3.4vw, 48px);
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  cursor: pointer;
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    opacity var(--duration-fast) var(--ease-out);
+}
+.work-arrow:hover {
+  border-color: var(--fg);
+}
+.work-arrow:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.work-arrow--prev {
+  left: clamp(16px, 2.6vw, 40px);
+}
+.work-arrow--next {
+  right: clamp(16px, 2.6vw, 40px);
+}
+
+/* Position counter (bottom-right). */
+.work-counter {
+  position: absolute;
+  right: clamp(20px, 5vw, 96px);
+  bottom: clamp(1.5rem, 5vh, 3rem);
+  font-family: var(--font-secondary);
+  font-size: var(--text-eyebrow);
+  letter-spacing: var(--tracking-mono);
+  color: var(--fg-muted);
+}
+
+/* Narrow screens — stack featured over centered details. */
+@media (max-width: 860px) {
+  .work-featured {
+    left: 50%;
+    top: clamp(78px, 15vh, 140px);
+    transform: translateX(-50%);
+    height: clamp(230px, 33vh, 320px);
+  }
+  .work-details {
+    left: 50%;
+    top: auto;
+    bottom: clamp(5rem, 22vh, 9rem);
+    width: min(88vw, 480px);
+    transform: translateX(-50%);
+    text-align: center;
+  }
+  .work-tags,
+  .work-stats {
+    justify-content: center;
+  }
+  .work-counter {
+    display: none;
+  }
+}
+
 /* ----------------------------------------------------------------------------
    Contact modal — centered multi-step form
 ---------------------------------------------------------------------------- */
@@ -285,7 +800,7 @@ button.nav-link {
   padding: 0;
   font-family: var(--font-secondary);
   font-size: var(--text-eyebrow);
-  letter-spacing: var(--tracking-wider);
+  letter-spacing: var(--tracking-mono);
 }
 .contact-steps li {
   opacity: 0.28;
@@ -302,7 +817,7 @@ button.nav-link {
   margin-bottom: var(--space-md);
   font-family: var(--font-secondary);
   font-size: var(--text-eyebrow);
-  letter-spacing: var(--tracking-wider);
+  letter-spacing: var(--tracking-mono);
   text-transform: uppercase;
   opacity: 0.55;
 }
@@ -346,7 +861,7 @@ button.nav-link {
   margin-top: var(--space-xs);
   font-family: var(--font-secondary);
   font-size: var(--text-eyebrow);
-  letter-spacing: var(--tracking-wide);
+  letter-spacing: var(--tracking-mono);
   color: var(--color-error);
 }
 
@@ -361,7 +876,7 @@ button.nav-link {
 .contact-submit {
   font-family: var(--font-secondary);
   font-size: var(--text-nav);
-  letter-spacing: var(--tracking-wider);
+  letter-spacing: var(--tracking-mono);
   text-transform: uppercase;
   cursor: pointer;
   border-radius: var(--radius-pill);
@@ -391,7 +906,7 @@ button.nav-link {
   margin-top: var(--space-md);
   font-family: var(--font-secondary);
   font-size: var(--text-2xs);
-  letter-spacing: var(--tracking-wide);
+  letter-spacing: var(--tracking-mono);
   opacity: 0.4;
 }
 
@@ -434,7 +949,7 @@ button.nav-link {
 .loader-name {
   font-family: var(--font-secondary);
   font-size: var(--text-sm);
-  letter-spacing: var(--tracking-widest);
+  letter-spacing: var(--tracking-mono);
   text-transform: uppercase;
   opacity: 0.6;
 }
@@ -466,7 +981,7 @@ button.nav-link {
 .loader-enter {
   font-family: var(--font-secondary);
   font-size: var(--text-nav);
-  letter-spacing: var(--tracking-wider);
+  letter-spacing: var(--tracking-mono);
   text-transform: uppercase;
   cursor: pointer;
   border: none;
@@ -545,8 +1060,156 @@ button.nav-link {
   font-family: var(--font-secondary);
   font-size: var(--text-sm);
   line-height: var(--leading-relaxed);
-  letter-spacing: var(--tracking-wide);
+  letter-spacing: var(--tracking-mono);
   color: var(--fg-muted);
+}
+
+/* ----------------------------------------------------------------------------
+   Custom cursor (sprite atlas — see components/CustomCursor.tsx)
+   Cell math: atlas 216×144, 72px cells shown at 40px → background-size 120×80.
+---------------------------------------------------------------------------- */
+.cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 40px;
+  height: 40px;
+  background-image: url("/cursors/cursors_atlas.webp");
+  background-repeat: no-repeat;
+  background-position: 0 0; /* arrow; JS swaps this */
+  background-size: 120px 80px;
+  pointer-events: none;
+  z-index: 9999; /* above everything, including the loader */
+  opacity: 0; /* revealed on first pointer move */
+  will-change: transform;
+  /* 1:1 with the pointer — no movement smoothing; only opacity fades. */
+  transition: opacity 0.2s var(--ease-out);
+}
+
+/* While the custom cursor is active, hide the native one everywhere. Added by
+   the component only for fine pointers + when JS runs (progressive enhancement). */
+html.custom-cursor,
+html.custom-cursor * {
+  cursor: none !important;
+}
+
+/* No cursor hardware → don't show the sprite. */
+@media (pointer: coarse) {
+  .cursor {
+    display: none;
+  }
+}
+
+/* ----------------------------------------------------------------------------
+   Scramble-text cursor label (components/ScrambleCursor.tsx)
+   A pill that trails the pointer and scrambles to a hovered element's
+   [data-cursor-text]. Themed; chevron uses the brand red.
+---------------------------------------------------------------------------- */
+.scramble-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9998; /* just under the sprite cursor (9999) */
+  pointer-events: none;
+  font-size: 16px; /* anchors the em units below */
+  padding-top: 1em;
+  padding-left: 0.5em;
+  padding-right: 1em; /* edge threshold for the flip */
+  will-change: transform;
+}
+.scramble-cursor__inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45em;
+  height: 1.75em;
+  padding: 0 0.55em;
+  border-radius: 0.4em;
+  background: var(--fg);
+  color: var(--bg);
+  opacity: 0;
+}
+.scramble-cursor__text {
+  font-family: var(--font-secondary);
+  font-size: 0.75em;
+  font-weight: 500;
+  letter-spacing: var(--tracking-mono);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.scramble-cursor__chevron {
+  width: 0.375em;
+  height: auto;
+  flex-shrink: 0;
+  /* inherits the label color (currentColor) so it matches the text */
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .scramble-cursor__inner {
+    transition:
+      transform 0.4s cubic-bezier(0.625, 0.05, 0, 1),
+      opacity 0.2s ease 0.1s;
+    transform: translateX(0) scale(1);
+  }
+  .scramble-cursor[data-cursor="active"] .scramble-cursor__inner {
+    transition:
+      transform 0.4s cubic-bezier(0.625, 0.05, 0, 1),
+      opacity 0.2s ease 0s;
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  .scramble-cursor[data-cursor="active-edge"] .scramble-cursor__inner {
+    transition:
+      transform 0.4s cubic-bezier(0.625, 0.05, 0, 1),
+      opacity 0.2s ease 0s;
+    opacity: 1;
+    transform: translateX(-100%) scale(1);
+  }
+}
+@media (hover: none), (pointer: coarse) {
+  .scramble-cursor {
+    display: none;
+  }
+}
+
+/* ----------------------------------------------------------------------------
+   Temporary theme switcher (dev only — will be replaced by project open/close)
+---------------------------------------------------------------------------- */
+.theme-switcher {
+  position: fixed;
+  right: var(--space-md);
+  bottom: var(--space-md);
+  z-index: 60; /* above overlays, below the loader */
+  display: flex;
+  gap: var(--space-3xs);
+  padding: var(--space-3xs);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--overlay);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.theme-switcher button {
+  font-family: var(--font-secondary);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-mono);
+  text-transform: uppercase;
+  color: var(--fg);
+  background: none;
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 0.4rem 0.85rem;
+  cursor: pointer;
+  opacity: 0.55;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+.theme-switcher button:hover {
+  opacity: 1;
+}
+.theme-switcher button.is-active {
+  background: var(--fg);
+  color: var(--bg);
+  opacity: 1;
 }
 
 /* ----------------------------------------------------------------------------
@@ -566,5 +1229,12 @@ button.nav-link {
   }
   .loader-enter {
     animation: none;
+  }
+  /* Skip the theme crossfade for reduced-motion users. */
+  html.theme-transitioning,
+  html.theme-transitioning *,
+  html.theme-transitioning *::before,
+  html.theme-transitioning *::after {
+    transition: none !important;
   }
 }

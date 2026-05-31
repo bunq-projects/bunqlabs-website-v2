@@ -1,8 +1,10 @@
 import Scene from "@/components/three/Scene";
-import RotatingHeading from "@/components/ui/RotatingHeading";
+import ViewSwitch from "@/components/ViewSwitch";
+import SearchBar from "@/components/ui/SearchBar";
 
-// Server component: ships real HTML (text below) for SEO/first paint.
+// Server component: ships real HTML (the hero text) for SEO/first paint.
 // The 3D layer hydrates on the client only — see components/three/Scene.tsx.
+// ViewSwitch swaps the hero for the Work view in place (no route change).
 export default function Home() {
   return (
     <>
@@ -11,10 +13,10 @@ export default function Home() {
       </div>
 
       <main className="content-layer">
-        <section className="hero">
-          <RotatingHeading />
-        </section>
+        <ViewSwitch />
       </main>
+
+      <SearchBar />
     </>
   );
 }

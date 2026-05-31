@@ -2,17 +2,17 @@
 
 import { useAppStore } from "@/lib/store";
 
-// Manual light/dark switch. Updates the store, <html data-theme>, localStorage,
-// AND the 3D palette (the canvas reads `theme` from the same store).
+// Manual light/dark switch for the site base theme. Updates the store, the two
+// CSS color vars, localStorage, AND the 3D scene (which reads from the store).
 export default function ThemeToggle() {
-  const theme = useAppStore((s) => s.theme);
-  const toggleTheme = useAppStore((s) => s.toggleTheme);
-  const isDark = theme === "dark";
+  const baseName = useAppStore((s) => s.baseName);
+  const toggleBaseTheme = useAppStore((s) => s.toggleBaseTheme);
+  const isDark = baseName === "dark";
 
   return (
     <button
       type="button"
-      onClick={toggleTheme}
+      onClick={toggleBaseTheme}
       className="nav-btn"
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
     >

@@ -1,32 +1,46 @@
 "use client";
 
 import { useEffect } from "react";
-import { useAppStore, isTheme, STORAGE_KEY } from "@/lib/store";
+import { useAppStore, STORAGE_KEY } from "@/lib/store";
+import { isBaseName } from "@/lib/theme";
 
 /**
- * Bridges the pre-paint inline script and the React store, and keeps the theme
- * in sync with the OS until the user makes an explicit choice.
- *
- * Renders nothing. Mount it once near the root.
+ * Syncs the store's base theme with the saved choice / OS preference after
+ * mount, and keeps following the OS until the user picks a base explicitly.
+ * The pre-paint script already set the colors; this aligns the store (and the
+ * 3D scene, which reads from it). Renders nothing.
  */
 export default function ThemeSync() {
-  const setTheme = useAppStore((s) => s.setTheme);
+  const setBaseTheme = useAppStore((s) => s.setBaseTheme);
 
   useEffect(() => {
-    // 1. Adopt whatever the inline script already set on <html> (no persist —
-    //    it might be an OS-derived value we want to keep following).
-    const domTheme = document.documentElement.dataset.theme;
-    if (isTheme(domTheme)) setTheme(domTheme, false);
+    let saved: string | null = null;
+    try {
+      saved = localStorage.getItem(STORAGE_KEY);
+    } catch {
+      /* ignore */
+    }
 
-    // 2. Follow OS changes, but only while the user hasn't picked a theme.
+    if (isBaseName(saved)) {
+      setBaseTheme(saved, false); // already persisted — don't re-write
+    } else {
+      const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      setBaseTheme(dark ? "dark" : "light", false); // OS-derived — don't persist
+    }
+
+    // Follow OS changes until the user makes an explicit choice.
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
     const onChange = (e: MediaQueryListEvent) => {
-      if (localStorage.getItem(STORAGE_KEY)) return; // user override wins
-      setTheme(e.matches ? "dark" : "light", false);
+      try {
+        if (localStorage.getItem(STORAGE_KEY)) return; // user override wins
+      } catch {
+        /* ignore */
+      }
+      setBaseTheme(e.matches ? "dark" : "light", false);
     };
     mq.addEventListener("change", onChange);
     return () => mq.removeEventListener("change", onChange);
-  }, [setTheme]);
+  }, [setBaseTheme]);
 
   return null;
 }

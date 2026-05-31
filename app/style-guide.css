@@ -69,6 +69,7 @@
   --tracking-wide: 0.02em;
   --tracking-wider: 0.12em;
   --tracking-widest: 0.2em;
+  --tracking-mono: -0.01em; /* Geist Mono — tightened to -1% */
 
   /* ===========================================================================
      6 · SPACING  (8-point grid + a couple of fluid gutters)
@@ -102,11 +103,29 @@
   --navbar-pad-y: clamp(1rem, 2.5vw, 1.75rem);
   --navbar-pad-x: clamp(1.25rem, 4vw, 3rem);
 
+  /* Page frame / border (square outer corners, rounded inner window) */
+  --frame-width: clamp(10px, 1.2vw, 16px);
+  --frame-radius: clamp(18px, 2.2vw, 34px);
+  --frame-color: var(--secondary);
+  --frame-corner: calc(var(--frame-width) + var(--frame-radius)); /* corner box size */
+
+  /* Background grid (faint 12-column guide; ~32px side margins like the design) */
+  --grid-margin: clamp(1rem, 2.2vw, 2rem);
+  --grid-gutter: clamp(6px, 0.7vw, 11px); /* gap between the two lines of each column */
+  --grid-line: color-mix(in srgb, var(--secondary) 4%, transparent);
+
+  /* Work view — featured card frame. Inset = the white border thickness; the
+     bottom meta strip holds the wordmark + OPEN. Tile rounding matches the 3D. */
+  --wf-inset: clamp(12px, 1.1vw, 17px);
+  --wf-meta-h: clamp(50px, 5.2vh, 66px);
+  --wf-radius: var(--radius-lg);
+
   /* ===========================================================================
      9 · Z-INDEX SCALE  (one place to reason about stacking)
   ============================================================================ */
-  --z-canvas: 0;
-  --z-content: 1;
+  --z-grid: 0; /* faint grid — the very back, behind the (transparent) canvas */
+  --z-canvas: 1;
+  --z-content: 2;
   --z-navbar: 10;
   --z-overlay: 50; /* contact / panel modals */
   --z-loader: 100; /* intro gate, above everything */
@@ -133,32 +152,34 @@
   --text-nav: var(--text-xs); /* navbar links / UI labels */
   --text-eyebrow: var(--text-2xs); /* small mono labels */
   --text-body: var(--text-base);
-  --text-hero: clamp(1.5rem, 5.5vw, 3.5rem); /* hero heading (24→56px) */
+  --text-hero: clamp(1.75rem, 5vw + 0.625rem, 4.5rem); /* hero 28→72px, fluid + zoom-safe */
 }
 
 /* =============================================================================
-   13 · COLOR — theme-aware semantic tokens
-   :root + [data-theme="light"] = light (site default).  [data-theme="dark"]
-============================================================================= */
-:root,
-[data-theme="light"] {
-  --bg: #f5f5f7;
-  --fg: #0a0a0f;
-  --fg-muted: rgba(10, 10, 15, 0.55);
-  --line: rgba(10, 10, 15, 0.12);
-  --overlay: rgba(245, 245, 247, 0.82);
-  --accent: #5b3df5;
-  --color-error: #d23d57;
-}
+   13 · COLOR — a whole theme from just TWO colors
+   -----------------------------------------------------------------------------
+   The theme system sets only --primary and --secondary (inline on <html>, via
+   lib/store.ts and the pre-paint script). EVERYTHING below is derived from them
+   with color-mix(), so any two colors yield a complete, coherent theme — and a
+   theme swap only has to change two values (the browser caches the rest).
 
-[data-theme="dark"] {
-  --bg: #0a0a0f;
-  --fg: #f5f5f7;
-  --fg-muted: rgba(245, 245, 247, 0.6);
-  --line: rgba(245, 245, 247, 0.14);
-  --overlay: rgba(10, 10, 15, 0.82);
-  --accent: #6d4aff;
-  --color-error: #e0556b;
+   Defaults below = the "light" theme (primary white, secondary black).
+============================================================================= */
+:root {
+  --primary: #ffffff; /* dominant / background */
+  --secondary: #000000; /* contrast / text */
+
+  /* Derived semantic tokens — do not hardcode these, they follow the two above */
+  --bg: var(--primary);
+  --fg: var(--secondary);
+  --fg-muted: color-mix(in srgb, var(--secondary) 58%, transparent);
+  --line: color-mix(in srgb, var(--secondary) 14%, transparent);
+  --line-strong: color-mix(in srgb, var(--secondary) 26%, transparent);
+  --overlay: color-mix(in srgb, var(--primary) 82%, transparent);
+  --accent: var(--secondary);
+
+  --color-error: #e0556b; /* fixed — independent of theme */
+  --brand-red: #ff3232; /* fixed brand accent — Contact, sparkle, dots */
 }
 
 /* =============================================================================
@@ -183,7 +204,7 @@
 .u-eyebrow {
   font-family: var(--font-secondary);
   font-size: var(--text-eyebrow);
-  letter-spacing: var(--tracking-wider);
+  letter-spacing: var(--tracking-mono);
   text-transform: uppercase;
 }
 
@@ -194,7 +215,7 @@
   justify-content: center;
   font-family: var(--font-secondary);
   font-size: var(--text-nav);
-  letter-spacing: var(--tracking-wider);
+  letter-spacing: var(--tracking-mono);
   text-transform: uppercase;
   cursor: pointer;
   border: 1px solid transparent;
